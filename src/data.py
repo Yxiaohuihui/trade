@@ -530,11 +530,11 @@ def fetch_financial_metrics(code: str, n_quarters: int = 4) -> pd.DataFrame:
         "code": code,
         "stat_date": pd.to_datetime(df["statDate"], errors="coerce").dt.date,
         "pub_date": pd.to_datetime(df["pubDate"], errors="coerce").dt.date,
-        "roe_avg": pd.to_numeric(df.get("roeAvg"), errors="coerce") * 100,
-        "np_margin": pd.to_numeric(df.get("npMargin"), errors="coerce") * 100,
-        "gp_margin": pd.to_numeric(df.get("gpMargin"), errors="coerce") * 100,
-        "yoy_ni": pd.to_numeric(df.get("YOYNI"), errors="coerce") * 100,
-        "yoy_equity": pd.to_numeric(df.get("YOYEquity"), errors="coerce") * 100,
+        "roe_avg": pd.to_numeric(df["roeAvg"], errors="coerce") * 100,
+        "np_margin": pd.to_numeric(df["npMargin"], errors="coerce") * 100,
+        "gp_margin": pd.to_numeric(df["gpMargin"], errors="coerce") * 100,
+        "yoy_ni": pd.to_numeric(df["YOYNI"], errors="coerce") * 100,
+        "yoy_equity": pd.to_numeric(df["YOYEquity"], errors="coerce") * 100,
     })
     return out.dropna(subset=["stat_date"])
 

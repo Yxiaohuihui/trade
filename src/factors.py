@@ -137,6 +137,8 @@ def _fetch_financial_features(conn, codes: list[str],
             FROM financial_metrics
             WHERE code IN (SELECT code FROM _univ_codes)
               AND pub_date <= ?
+              AND stat_date IS NOT NULL
+              AND EXTRACT(MONTH FROM stat_date) > 0
             QUALIFY ROW_NUMBER() OVER (
               PARTITION BY code ORDER BY stat_date DESC, pub_date DESC
             ) = 1

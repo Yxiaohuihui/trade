@@ -25,9 +25,9 @@ import pandas as pd
 @dataclass
 class BacktestResult:
     """回测结果汇总。"""
-    nav: pd.Series                          # 组合每日 NAV（起始 1.0）
-    benchmark_nav: pd.Series                # 基准每日 NAV（起始 1.0）
-    metrics: dict                           # 关键指标
+    nav: pd.Series | None = None                  # 组合每日 NAV（起始 1.0）
+    benchmark_nav: pd.Series | None = None        # 基准每日 NAV（起始 1.0）
+    metrics: dict = field(default_factory=dict)   # 关键指标
     holdings_history: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
@@ -93,7 +93,7 @@ def _compute_metrics(nav: pd.Series, bench: pd.Series) -> dict:
         return {}
     daily_ret = nav.pct_change().dropna()
     bench_ret = bench.pct_change().dropna() if not bench.empty else None
-    n_days = len(nav)
+    n_days = max(len(daily_ret), 1)  # trade days (excluding start point), at least 1
 
     cum = nav.iloc[-1] - 1
     annual = (nav.iloc[-1]) ** (252.0 / n_days) - 1
@@ -190,10 +190,12 @@ def run_backtest(conn: duckdb.DuckDBPyConnection,
         if daily_close.empty:
             continue
         for d, day_df in daily_close.groupby("trade_date"):
+            if not current_holdings:
+                continue
             value = sum(current_holdings[c] * day_df.set_index("code")["close"].get(c, 0)
                        for c in current_holdings)
             portfolio_value = value + cash
-            nav_records.append((d, portfolio_value))
+            nav_records.append((pd.Timestamp(d).date(), portfolio_value))  # type: ignore[arg-type]
 
     nav = pd.DataFrame(nav_records, columns=["date", "nav"]).drop_duplicates("date")
     nav = nav.set_index("date")["nav"]

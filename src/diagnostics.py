@@ -10,6 +10,8 @@ import duckdb
 import numpy as np
 import pandas as pd
 
+from src.factors import _MOMENTUM_PEAK, _MOMENTUM_SIGMA
+
 
 # ------------------------------------------------------------------
 # 因子相关性
@@ -26,18 +28,19 @@ def factor_correlation(conn: duckdb.DuckDBPyConnection,
     snapshot_date=None 默认取最新一日；method 默认 spearman（rank-based 鲁棒）。
     """
     if snapshot_date is None:
-        snapshot_date = conn.execute(
+        row = conn.execute(
             "SELECT MAX(snapshot_date) FROM factor_snapshots"
-        ).fetchone()[0]
-    if snapshot_date is None:
-        raise RuntimeError("factor_snapshots 表为空，先跑 make run。")
+        ).fetchone()
+        if row is None or row[0] is None:
+            raise RuntimeError("factor_snapshots 表为空，先跑 make run。")
+        snapshot_date = row[0]
 
     cols = ", ".join(_FACTOR_COLS)
     df = conn.execute(
         f"SELECT {cols} FROM factor_snapshots WHERE snapshot_date = ?",
         [snapshot_date],
     ).fetch_df()
-    return df.corr(method=method)
+    return df.corr(method=method)  # type: ignore[arg-type]
 
 
 def print_factor_correlation(conn: duckdb.DuckDBPyConnection,
@@ -52,7 +55,7 @@ def print_factor_correlation(conn: duckdb.DuckDBPyConnection,
     for i, a in enumerate(_FACTOR_COLS):
         for b in _FACTOR_COLS[i + 1:]:
             rho = corr.loc[a, b]
-            if abs(rho) > 0.5:
+            if abs(float(rho)) > 0.5:  # type: ignore[arg-type]
                 flagged.append(f"  {a} ↔ {b}: ρ={rho:+.3f}")
     if flagged:
         print("\n".join(flagged))
@@ -131,8 +134,11 @@ def print_momentum_diagnosis(conn: duckdb.DuckDBPyConnection,
 
     suggestion = suggest_momentum_params(conn, lookback_years)
     print("=== 钟形曲线参数对照 ===")
-    print(f"  当前 hard-coded: peak=10.0, sigma=15.0  （凭直觉）")
+    print(f"  当前 factors.py:  peak={_MOMENTUM_PEAK}, sigma={_MOMENTUM_SIGMA}")
     print(f"  经验分布建议  : peak={suggestion['peak']}, sigma={suggestion['sigma']}  "
           f"（峰值=75分位，半宽=(90分位-75分位)×1.4）")
     print()
-    print("如果 peak 差距 > 5pp 或 sigma 差距 > 5，建议改 factors._momentum_curve。")
+    if abs(suggestion['peak'] - _MOMENTUM_PEAK) > 5 or abs(suggestion['sigma'] - _MOMENTUM_SIGMA) > 5:
+        print("⚠️  当前参数偏离经验分布，建议同步 factors._momentum_curve 参数。")
+    else:
+        print("✅ 当前参数与经验分布基本一致。")

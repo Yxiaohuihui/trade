@@ -27,6 +27,8 @@ def build_universe(conn: duckdb.DuckDBPyConnection,
 
     # 先过滤到 stock 类型，避免把 ETF 卷进来
     df = spot_df[spot_df.get("asset_type", "stock") == "stock"].copy()
+    if not isinstance(df, pd.DataFrame):
+        return pd.DataFrame()
     df = df[df["code"].isin(members)]
 
     df = _attach_stock_meta(conn, df)

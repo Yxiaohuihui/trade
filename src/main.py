@@ -46,7 +46,7 @@ def cmd_refresh_data(args) -> None:
         codes = codes[: args.limit]
         print(f"      [测试模式] 仅处理前 {len(codes)} 只")
 
-    print("[2/7] 拉取股票名称表（akshare 兜底）...")
+    print(f"[2/7] 拉取股票名称表（akshare 兜底）...")
     names = data.fetch_stock_names()
     if not names.empty:
         names = names[names["code"].isin(codes)]
@@ -54,14 +54,14 @@ def cmd_refresh_data(args) -> None:
         print(f"      写入 {len(names)} 行")
 
     print(f"[3/7] 刷新 {len(codes)} 只标的的行情 + 估值 ...")
-    print("      （首次约需 10-20 分钟，后续增量更新约 1 分钟）")
-    data.refresh_history_incremental(conn, codes, min_days=120,
+    print("      （首次约需 10-20 分钟，后续增量更新约 1-2 分钟）")
+    data.refresh_history_incremental(conn, list(codes), min_days=120,
                                      sleep_sec=args.sleep)
-    data.refresh_indicator_incremental(conn, codes, sleep_sec=args.sleep)
+    data.refresh_indicator_incremental(conn, list(codes), sleep_sec=args.sleep)
 
     with data.baostock_session():
         print("[4/7] 刷新行业分类 + 上市日期（baostock 全市场一次拉）...")
-        n_meta = data.refresh_stock_meta(conn, codes=set(codes))
+        n_meta = data.refresh_stock_meta(conn, codes=list(codes))
         print(f"      写入 {n_meta} 行")
 
         print("[5/7] 刷新基准指数行情（沪深300 / 中证500）...")
@@ -81,8 +81,11 @@ def cmd_refresh_data(args) -> None:
         ("daily_quotes", "SELECT MAX(trade_date) FROM daily_quotes"),
         ("daily_indicators", "SELECT MAX(trade_date) FROM daily_indicators"),
     ]:
-        latest = conn.execute(sql).fetchone()[0]
-        validators.check_freshness(latest, label)
+        row = conn.execute(sql).fetchone()
+        if row and row[0]:
+            validators.check_freshness(row[0], label)
+        else:
+            validators.check_freshness(None, label)
 
 
 def cmd_run(_args) -> None:
@@ -94,8 +97,11 @@ def cmd_run(_args) -> None:
         ("daily_quotes", "SELECT MAX(trade_date) FROM daily_quotes"),
         ("daily_indicators", "SELECT MAX(trade_date) FROM daily_indicators"),
     ]:
-        latest = conn.execute(sql).fetchone()[0]
-        validators.check_freshness(latest, label)
+        row = conn.execute(sql).fetchone()
+        if row and row[0]:
+            validators.check_freshness(row[0], label)
+        else:
+            validators.check_freshness(None, label)
 
     print("[1/5] 拉取实时快照 ...")
     # 持仓里的 ETF 走腾讯单只拉（东财 ETF 端点不稳）
