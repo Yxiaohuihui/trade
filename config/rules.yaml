@@ -1,0 +1,39 @@
+# 信号规则配置。每次只改一个旋钮，避免相互掩盖。
+
+portfolio_check:
+  # 估值红绿灯：基于个股 PE 在自身过去 5 年的分位（默认窗口可改 factors._fetch_indicator_features）
+  pe_pct_red: 90        # PE 分位 > 90% → 红灯（高估，考虑止盈）
+  pe_pct_yellow: 75     # PE 分位 > 75% → 黄灯（观察）
+  pe_pct_buy: 25        # PE 分位 < 25% → 加仓候选
+
+  # 浮盈触发止盈
+  profit_trim_pct: 30   # 浮盈 > 30% 且 PE 分位高于红灯 → 建议止盈
+
+  # 浮亏管理
+  loss_review_pct: -8   # 浮亏 < -8% → 黄灯（复盘基本面）
+  loss_stop_pct: -15    # 浮亏 < -15% → 红灯（强制复盘）
+
+cash_deployment:
+  # 月度定投预算
+  monthly_dca_budget: 6000
+
+  # 沪深 300 ETF 网格加仓
+  grid_anchor_code: "159330"   # 锚定 ETF 代码（用户实际持有的 300 ETF）
+  grid_step_pct: 3             # 每跌 3% 触发一档买入
+  grid_slice: 3000             # 每档投入金额（元）
+  grid_max_slices: 10          # 最多 10 档（共 3 万元）
+
+  # 沪深 300 估值驱动节奏
+  index_code: "000300"
+  index_pe_low_pct: 25         # PE 分位 < 25% → 定投加速 1.5 倍
+  index_pe_high_pct: 75        # PE 分位 > 75% → 暂停定投
+
+radar:
+  top_n: 20
+  consecutive_highlight_days: 10   # 连续入围 ≥ 此天数才打 ⭐ 重点研究标记
+  factor_weights:
+    valuation: 1.0    # 估值（PE 分位倒置）
+    dividend: 1.0     # 股息率（不分红股票为 NaN，不参与本因子排名）
+    quality: 1.0      # 质量（baostock 季度 ROE 简单年化后的横截面排名）
+    momentum: 1.0     # 60 日动量（钟形函数，参数由 diag-momentum 锚定）
+    volatility: 1.0   # 波动率（倒置，越低分越高）

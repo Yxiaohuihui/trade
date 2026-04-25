@@ -1,0 +1,27 @@
+# 持仓清单模板（首次使用：cp positions.yaml.example positions.yaml 后填入真实数据）
+# 真实的 positions.yaml 已在 .gitignore 中，不会上传
+#
+# 字段说明：
+#   code: 6 位股票/基金代码（不带交易所前缀，必要时用 zfill 补 0）
+#   name: 显示名（自由命名）
+#   shares: 持仓股数 / 份数
+#   cost_price: 成本均价
+#   asset_type: "stock"（默认）或 "etf"
+#
+# 提醒：ETF 代码请以券商 App 显示为准
+
+positions:
+  - code: "601988"
+    name: "中国银行"
+    shares: 1000
+    cost_price: 4.500
+    asset_type: "stock"
+
+  - code: "588000"
+    name: "科创50 ETF"
+    shares: 5000
+    cost_price: 1.500
+    asset_type: "etf"
+
+cash: 50000.00          # 可用现金（元）
+total_budget: 100000    # 总投资预算（用于现金占比建议）

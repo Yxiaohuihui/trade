@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+.jbeval/
+identifier.db
+
+# Data & generated output (user-specific, not for repo)
+data/*.duckdb
+data/*.duckdb.wal
+data/*.parquet
+reports/
+logs/
+
+# Personal config (持仓数据是隐私，仓库里只保留 example 模板)
+config/positions.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.local

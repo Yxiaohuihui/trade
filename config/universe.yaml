@@ -1,0 +1,19 @@
+universe:
+  # 股票池：必须属于以下至少一个指数
+  index_membership:
+    - "000300"   # 沪深 300
+    - "000905"   # 中证 500
+
+  # 硬过滤
+  min_market_cap_yi: 100        # 总市值 ≥ 100 亿元（1 亿 = 1e8）
+  exclude_st: true              # 排除名字含 "ST"
+  require_positive_pe: true     # 排除亏损公司
+  min_list_years: 3             # 排除上市不足 3 年的（list_date 由 baostock 提供）
+
+  # 软过滤：剔除指定行业（列表为空则全收）
+  # 行业字段用国标 GB/T 4754，由 baostock 提供，需要写完整名字（含字母前缀）
+  exclude_industries: []
+  # 示例：已重仓银行/地产可以加上：
+  # exclude_industries:
+  #   - "J66货币金融服务"
+  #   - "K70房地产业"
